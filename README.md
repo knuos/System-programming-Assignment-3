@@ -7,12 +7,10 @@
 
 ## 1. 실습 개요
 
-강의에서 두 가지 경계를 배웠다.
+- **시스템 콜** — 사용자 공간과 커널 간 인터페이스 (process context)
+- **인터럽트** — 하드웨어와 커널 간 인터페이스 (interrupt context, sleep 불가)
 
-- **시스템 콜** — 사용자 공간이 커널로 들어오는 유일한 정식 입구 (process context)
-- **인터럽트** — 하드웨어가 커널을 부르는 입구 (interrupt context, sleep 불가)
-
-이번 실습에서는 이 두 입구를 **하나의 데이터로 연결**한다.
+이번 실습에서는 이 두 인터페이스를 **하나의 데이터로 연결**한다.
 
 ```
  사용자 프로그램                 커널
@@ -130,41 +128,7 @@ sudo ./tools/run_all.sh
 
 ---
 
-## 6. 평가 기준
-
-| 항목 | 배점 | 보는 것 |
-|---|---|---|
-| Part A | 35 | `sys_hello` 가 472번으로 등록되는가, `strncpy_from_user` 반환값 3가지를 모두 처리했는가, 락을 올바르게 잡았는가 |
-| Part B | 15 | 정상 / `EFAULT` / `EINVAL` 세 경우가 모두 재현되는가 |
-| Part C | 30 | 주기대로 정확히 count 번 출력되는가, `rmmod` 가 깨끗한가, 콜백에서 sleep 하는 함수를 쓰지 않았는가 |
-| 보고서 | 20 | Q1~Q5 에 측정·로그로 답했는가 |
-| 심화 | +10 | 선택 |
-
-**감점**
-
-- 빌드 실패 상태로 제출 (−15)
-- `run.log` 없이 코드만 제출 (−10)
-- 사용자 포인터를 직접 역참조 (−10) — 보안 결함이다
-- 콜백 안에서 sleep 가능한 함수 사용 (−10) — 시스템을 멈출 수 있다
-- 타인의 코드를 그대로 제출 / AI 출력물을 이해 없이 붙여넣기 → **0점**
-  (참고는 허용한다. 단 보고서에 출처를 밝히고, 추가한 모든 줄을 설명할 수 있어야 한다)
-
----
-
-## 7. 심화 과제 (택 1, +10)
-
-1. **`sys_hello_status`** — 473번 시스템 콜을 하나 더 만들어 `struct hello_info { unsigned int remaining; unsigned long printed; }` 를
-   `copy_to_user()` 로 돌려준다. 사용자 프로그램이 0.5초마다 호출해 남은 횟수가 줄어드는 것을 출력한다.
-   (`printed` 는 모듈 쪽 값이다 — 커널과 모듈 사이에 어떻게 넘길지 설계할 것)
-2. **지터 측정** — 콜백에서 `ktime_get()` 으로 실제 실행 시각을 재고, 기대 시각(`hrtimer_get_expires()`)과의 차이를 ns 단위로
-   기록한다. `period_ms=10`, 유휴 상태와 부하 상태에서 각각 100회 측정해 최솟값/평균/최댓값을 비교한다.
-3. **`request_irq()` 와 비교** — 왜 이 실습에서 `request_irq(0, ...)` 로 타이머에 handler 를 붙이지 않았는지,
-   `/proc/interrupts` 의 `0:` 줄과 `LOC:` 줄을 근거로 설명하고, 키보드(i8042, IRQ 1)에 `IRQF_SHARED` handler 를 붙여
-   키를 누를 때마다 `hello_take()` 를 소비하도록 바꿔 본다. (VM 콘솔에서만, 스냅샷 후에)
-
----
-
-## 8. 자주 막히는 지점
+## 6. 자주 막히는 지점
 
 | 증상 | 원인과 해결 |
 |---|---|
@@ -179,7 +143,7 @@ sudo ./tools/run_all.sh
 
 ---
 
-## 9. 안전 수칙
+## 7. 안전 수칙
 
 - **반드시 VM에서.** 실습 시작 전 스냅샷을 찍을 것
 - 콜백(hardirq)에서 `msleep`, `mutex_lock`, `kmalloc(GFP_KERNEL)`, `copy_to_user` **금지**
@@ -188,7 +152,7 @@ sudo ./tools/run_all.sh
 
 ---
 
-## 10. 참고 자료
+## 8. 참고 자료
 
 - Robert Love, *Linux Kernel Development*, 3rd ed. — Ch.5 System Calls, Ch.7 Interrupts, Ch.11 Timers
 - 강의 슬라이드 — `5. System Calls (Linux 7.2).pptx`
@@ -205,8 +169,3 @@ sudo ./tools/run_all.sh
 - `man 2 syscall`, `man 1 strace`, `Documentation/process/adding-syscalls.rst`
 
 ---
-
-## 11. 제출 기한
-
-다음 주 실습 시작 전까지 (구체적 일시는 LMS 공지).
-질문은 **LMS 게시판**에 남기면 다른 수강생에게도 도움이 된다.
